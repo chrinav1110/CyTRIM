@@ -38,13 +38,21 @@ cpdef trajectory(object pos_init, object dir_init, double e_init):
 
     cdef object out
 
+    cdef double[:] posv = pos
+    cdef double[:] dirv = dir
+
     while e > _emin:
 
         free_path, p, dirp, _ = _get_recoil(pos, dir)
 
         e -= _eloss(e, free_path)
 
-        pos += free_path * dir
+        #pos += free_path * dir
+        posv = pos
+        dirv = dir
+        posv[0] += free_path * dirv[0]
+        posv[1] += free_path * dirv[1]
+        posv[2] += free_path * dirv[2]
 
         if not _inside(pos):
             is_inside = False
