@@ -1,0 +1,1 @@
+cpdef double eloss(double e, double free_path)

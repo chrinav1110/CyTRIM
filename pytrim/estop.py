@@ -7,9 +7,38 @@ Available functions:
     setup: setup module variables.
     eloss: calculate the electronic energy loss.
 """
+
 from math import sqrt
 
+# pure-python mode type names
+try:
+    import cython
+except ImportError:
+    cython = None
 
+FAC_LINDHARD: float = 0.0
+DENSITY: float = 0.0
+
+
+def setup(corr_lindhard: float, z1: float, m1: float, z2: float, density: float) -> None:
+    global FAC_LINDHARD, DENSITY
+
+    FAC_LINDHARD = corr_lindhard * 1.212 * z1**(7/6) * z2 / (
+        (z1**(2/3) + z2**(2/3))**(3/2) * sqrt(m1) )
+    DENSITY = density
+
+
+@cython.locals(e=float, free_path=float, dee=float)
+def eloss(e: float, free_path: float) -> float:
+    dee = FAC_LINDHARD * DENSITY * sqrt(e) * free_path
+    if dee > e:
+        dee = e
+    return dee
+
+
+
+
+'''
 def setup(corr_lindhard, z1, m1, z2, density):
     """Setup module variables depending on target density.
 
@@ -45,3 +74,5 @@ def eloss(e, free_path):
         dee = e
 
     return dee
+
+'''

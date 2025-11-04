@@ -1,0 +1,1 @@
+cdef bint is_inside_target(double[:] pos)

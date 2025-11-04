@@ -27,6 +27,7 @@ def setup(density):
     PMAX = MEAN_FREE_PATH / sqrt(np.pi)
 
 
+
 def get_recoil_position(pos, dir):
     """Get the recoil position based on the projectile position and direction.
 
@@ -47,6 +48,8 @@ def get_recoil_position(pos, dir):
     p = PMAX * sqrt(np.random.rand())
     # Azimuthal angle fi
     fi = 2 * np.pi * np.random.rand()
+
+
     cos_fi = cos(fi)
     sin_fi = sin(fi)
 
@@ -69,5 +72,6 @@ def get_recoil_position(pos, dir):
 
     # position of the recoil
     pos_recoil = pos_collision[:] + p * dirp[:]
+
 
     return free_path, p, dirp, pos_recoil

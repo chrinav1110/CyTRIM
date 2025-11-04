@@ -8,6 +8,58 @@ from scatter import scatter
 from estop import eloss
 from geometry import is_inside_target
 
+try:
+    import cython
+except ImportError:
+    cython = None
+
+EMIN: float = 5.0
+
+
+def setup() -> None:
+    global EMIN
+    # keep here in case you change later
+    EMIN = 5.0
+
+
+@cython.locals(e=float, dee=float, free_path=float)
+def trajectory(pos_init, dir_init, e_init: float):
+    """
+    Simulate one trajectory.
+    """
+    # *** IMPORTANT: localise functions (1× lookup vs ~thousands) ***
+    _get_recoil = get_recoil_position
+    _scatter    = scatter
+    _eloss      = eloss
+    _inside     = is_inside_target
+    _emin       = EMIN
+
+    pos = pos_init.copy()
+    dir = dir_init.copy()
+    e   = e_init
+    is_inside = True
+
+    while e > _emin:
+
+        free_path, p, dirp, _ = _get_recoil(pos, dir)
+
+        dee = _eloss(e, free_path)
+        e -= dee
+
+        # numpy does this in C, good
+        pos += free_path * dir
+
+        if not _inside(pos):
+            is_inside = False
+            break
+
+        # scatter changes direction + energy
+        dir, e, _, _ = _scatter(e, dir, p, dirp)
+
+    return pos, dir, e, is_inside
+
+
+'''
 def setup():
     """Setup module variables.
 
@@ -53,3 +105,4 @@ def trajectory(pos_init, dir_init, e_init):
         dir, e, _, _ = scatter(e, dir, p, dirp)
 
     return pos, dir, e, is_inside
+'''
