@@ -1,6 +1,7 @@
 # geometry.pyx
 # cython: language_level=3
 # cython: boundscheck=False, wraparound=False, cdivision=True
+# cython: profile=True
 
 cdef double ZMIN = 0.0
 cdef double ZMAX = 0.0

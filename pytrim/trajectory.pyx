@@ -1,6 +1,7 @@
 # trajectory.pyx
 # cython: language_level=3
 # cython: boundscheck=False, wraparound=False
+# cython: profile=True
 
 # we import python-level functions (cython compiled versions available)
 from select_recoil import get_recoil_position
@@ -33,13 +34,15 @@ cpdef trajectory(object pos_init, object dir_init, double e_init):
     # copy to avoid alias issues
     cdef object pos = pos_init.copy()
     cdef object dir = dir_init.copy()
+
+    cdef double[:] posv = pos
+    cdef double[:] dirv = dir
+
     cdef double e   = e_init
     cdef bint is_inside = True
 
     cdef object out
 
-    cdef double[:] posv = pos
-    cdef double[:] dirv = dir
 
     while e > _emin:
 
@@ -48,8 +51,6 @@ cpdef trajectory(object pos_init, object dir_init, double e_init):
         e -= _eloss(e, free_path)
 
         #pos += free_path * dir
-        posv = pos
-        dirv = dir
         posv[0] += free_path * dirv[0]
         posv[1] += free_path * dirv[1]
         posv[2] += free_path * dirv[2]
