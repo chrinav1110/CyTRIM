@@ -43,7 +43,6 @@ trajectory.setup()
 
 
 def run_one(_):
-    # ONE trajectory
     return trajectory.trajectory(G_pos_init, G_dir_init, G_e_init)
 
 # ==========================================================
