@@ -41,12 +41,15 @@ cpdef trajectory(object pos_init, object dir_init, double e_init):
     cdef double e   = e_init
     cdef bint is_inside = True
 
-    cdef object out
+    cdef object out = np.empty(8, dtype=np.float64)
+    cdef double[:] outv = out    # memoryview of the same buffer
 
+    cdef object dirp = np.empty(3, dtype=np.float64)
+    cdef double[:] dirpv = dirp
 
     while e > _emin:
 
-        free_path, p, dirp, _ = _get_recoil(pos, dir)
+        free_path, p = _get_recoil(pos, dir, dirpv)
 
         e -= _eloss(e, free_path)
 
@@ -59,10 +62,10 @@ cpdef trajectory(object pos_init, object dir_init, double e_init):
             is_inside = False
             break
 
-        out = _scatter(e, dir, p, dirp)
-        dir[0] = out[0]
-        dir[1] = out[1]
-        dir[2] = out[2]
+        _scatter(e, dir, p, dirp, outv)
+        dir[0] = outv[0]
+        dir[1] = outv[1]
+        dir[2] = outv[2]
         e = out[3]
 
     return pos, dir, e, is_inside
