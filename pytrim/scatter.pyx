@@ -2,7 +2,19 @@
 # cython: language_level=3
 # cython: boundscheck=False, wraparound=False, cdivision=True
 
-from libc.math cimport sqrt, exp, pow
+"""Treat the scattering of a projectile on a target atom.
+
+Currently, only the ZBL potential (Ziegler, Biersack, Littmark,
+The Stopping and Range of Ions in Matter, Pergamon Press, 1985) is
+implemented, along with Biersack's "magic formula" for the scattering
+angle.
+
+Available functions:
+    setup: setup module variables.
+    scatter: treat a scattering event.
+"""
+
+from libc.math cimport sqrt, exp, pow, fabs
 import numpy as np
 
 # module globals
@@ -21,9 +33,18 @@ def setup(double z1, double m1, double z2, double m2):
     DENFAC = 4 * m1_m2 / (1 + m1_m2)**2
 
 # --- ZBL constants ---
-A1=0.18175; A2=0.50986; A3=0.28022; A4=0.02817
-B1=3.1998;  B2=0.94229; B3=0.4029;  B4=0.20162
-A1B1=A1*B1; A2B2=A2*B2; A3B3=A3*B3; A4B4=A4*B4
+cdef double A1=0.18175
+cdef double A2=0.50986
+cdef double A3=0.28022
+cdef double A4=0.02817
+cdef double B1=3.1998
+cdef double B2=0.94229
+cdef double B3=0.4029
+cdef double B4=0.20162
+cdef double A1B1=A1*B1
+cdef double A2B2=A2*B2
+cdef double A3B3=A3*B3
+cdef double A4B4=A4*B4
 
 def ZBLscreen(double r):
     cdef double e1 = exp(-B1 * r)
@@ -95,8 +116,9 @@ def magic(double e, double p):
         cos_half_theta = 1
     return cos_half_theta
 
-# >>> NEW scatter interface: writes into out buffer
+
 cpdef scatter(double e, double[::1] dir, double p, double[::1] dirp, double[::1] out):
+
     cdef double cos_half_theta = magic(e/ENORM, p/RNORM)
     cdef double sin_psi = cos_half_theta
     cdef double cos_psi = sqrt(1 - sin_psi*sin_psi)

@@ -13,11 +13,9 @@ import numpy as np
 
 cdef double EMIN = 5.0
 
-
 def setup():
     global EMIN
     EMIN = 5.0
-
 
 cpdef trajectory(object pos_init, object dir_init, double e_init):
     """

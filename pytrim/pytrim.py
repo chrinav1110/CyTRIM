@@ -6,11 +6,15 @@ from math import sqrt
 import time
 import numpy as np
 
+from multiprocessing import Pool
+
 import select_recoil
 import scatter
 import estop
 import geometry
 import trajectory
+
+
 
 # ==========================================================
 # global physics constants (so workers see them on import!)
@@ -45,18 +49,13 @@ trajectory.setup()
 def run_one(_):
     return trajectory.trajectory(G_pos_init, G_dir_init, G_e_init)
 
-# ==========================================================
-# main
-# ==========================================================
 
+#main
 def main(nion:int = 1000):
-    start_time = time.time()
-    # no assignment to G_pos_init etc heres
 
     start_time = time.time()
 
-    # ----- multiprocessing -----
-    from multiprocessing import Pool
+    # multiprocessingl
     with Pool() as pool:
         results = pool.map(run_one, range(nion))
 

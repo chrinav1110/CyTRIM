@@ -2,7 +2,18 @@
 # cython: language_level=3
 # cython: boundscheck=False, wraparound=False, cdivision=True
 
-from libc.math cimport sqrt, sin, cos, fabs
+"""Create the recoil position for the next collision.
+
+Currently, only amorphous targets are supported. The free path length to
+the next collision is assumed to be constant and equal to the atomic
+density to the power -1/3.
+
+Available functions:
+    setup: setup module variables.
+    get_recoil_position: get the recoil position.
+"""
+
+from libc.math cimport sqrt, sin, cos, fabs, M_PI
 import numpy as np
 
 cdef double MEAN_FREE_PATH = 1.0
@@ -11,14 +22,18 @@ cdef double PMAX = 1.0
 def setup(double density):
     global MEAN_FREE_PATH, PMAX
     MEAN_FREE_PATH = density**(-1.0/3.0)
-    PMAX = MEAN_FREE_PATH / sqrt(np.pi)
+    PMAX = MEAN_FREE_PATH / sqrt(M_PI)
+
 
 cpdef get_recoil_position(double[::1] pos, double[::1] dir, double[::1] dirp_out):
-    cdef double free_path = MEAN_FREE_PATH
 
+    cdef double pos_collision[3]
+    cdef double pos_recoil[3]
+
+    cdef double free_path = MEAN_FREE_PATH
     # random p + phi
     cdef double p = PMAX * sqrt(np.random.rand())
-    cdef double fi = 6.283185307179586 * np.random.rand()
+    cdef double fi = 2 * M_PI * np.random.rand()
 
     cdef double cos_fi = cos(fi)
     cdef double sin_fi = sin(fi)
@@ -47,10 +62,25 @@ cpdef get_recoil_position(double[::1] pos, double[::1] dir, double[::1] dirp_out
     dirp_out[k] = dk
 
     # normalize
-    cdef double n = sqrt(dirp_out[0]*dirp_out[0] + dirp_out[1]*dirp_out[1] + dirp_out[2]*dirp_out[2])
-    if n != 0.0:
-        dirp_out[0] /= n
-        dirp_out[1] /= n
-        dirp_out[2] /= n
+    cdef double n = sqrt(dirp_out[0]*dirp_out[0] +
+                         dirp_out[1]*dirp_out[1] +
+                         dirp_out[2]*dirp_out[2])
+    dirp_out[0] /= n
+    dirp_out[1] /= n
+    dirp_out[2] /= n
+
+    '''
+    # pos_recoil is never used?
+    # collision point
+    pos_collision[0] = pos[0] + free_path*dir[0]
+    pos_collision[1] = pos[1] + free_path*dir[1]
+    pos_collision[2] = pos[2] + free_path*dir[2]
+
+    # recoil point
+    pos_recoil[0] = pos_collision[0] + p*dirp_out[0]
+    pos_recoil[1] = pos_collision[1] + p*dirp_out[1]
+    pos_recoil[2] = pos_collision[2] + p*dirp_out[2]
+    return free_path, p, pos_recoil
+    '''
 
     return free_path, p

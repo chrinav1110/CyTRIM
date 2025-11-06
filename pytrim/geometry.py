@@ -10,7 +10,6 @@ Available functions:
 Target-geometry related operations.
 """
 
-# optional pure-python mode access to cython decorators
 try:
     import cython
 except ImportError:
