@@ -15,7 +15,6 @@ Available functions:
 """
 
 from libc.math cimport sqrt, exp, pow, fabs
-import numpy as np
 
 # module globals
 cdef double ENORM = 1.0
@@ -46,74 +45,74 @@ cdef double A2B2=A2*B2
 cdef double A3B3=A3*B3
 cdef double A4B4=A4*B4
 
-def ZBLscreen(double r):
+cdef inline void ZBLscreen_vals(double r, double* screen, double* dscreen) nogil:
     cdef double e1 = exp(-B1 * r)
     cdef double e2 = exp(-B2 * r)
     cdef double e3 = exp(-B3 * r)
     cdef double e4 = exp(-B4 * r)
-    cdef double screen = A1*e1 + A2*e2 + A3*e3 + A4*e4
-    cdef double dscreen = - (A1B1*e1 + A2B2*e2 + A3B3*e3 + A4B4*e4)
-    return screen, dscreen
+    screen[0]  = A1*e1 + A2*e2 + A3*e3 + A4*e4
+    dscreen[0] = - (A1B1*e1 + A2B2*e2 + A3B3*e3 + A4B4*e4)
 
 # --- apsis constants ---
-K2 = 0.38
-K3 = 7.2
-K1 = 1/(4*K2)
-R12sq = (2*K2)**2
-R23sq = K3 / K2
-NITER = 1
+cdef double K2    = 0.38
+cdef double K3    = 7.2
+cdef double K1    = 1.0/(4.0*K2)
+cdef double R12sq = (2.0*K2)*(2.0*K2)
+cdef double R23sq = K3 / K2
+cdef int    NITER = 1
 
-def estimate_apsis(double e, double p):
-    cdef double psq = p*p
-    cdef double r0sq = 0.5 * (psq + sqrt(psq*psq + 4*K3/e))
-
+cdef inline double estimate_apsis(double e, double p):
+    cdef double psq   = p*p
+    cdef double r0sq  = 0.5 * (psq + sqrt(psq*psq + 4.0*K3/e))
+    cdef double r0
     if r0sq < R23sq:
         r0sq = psq + K2/e
         if r0sq < R12sq:
-            r0 = (1 + sqrt(1 + 4*e*(e+K1)*psq)) / (2*(e+K1))
+            r0 = (1.0 + sqrt(1.0 + 4.0*e*(e+K1)*psq)) / (2.0*(e+K1))
         else:
             r0 = sqrt(r0sq)
     else:
         r0 = sqrt(r0sq)
 
     cdef double screen, dscreen, numerator, denominator, residuum
+    cdef int it
+    for it in range(NITER):
+        ZBLscreen_vals(r0, &screen, &dscreen)
+        numerator   = r0*(r0 - screen/e) - psq
+        denominator = 2.0*r0 - (screen + r0*dscreen)/e
+        r0 -= numerator / denominator
 
-    for _ in range(NITER):
-        screen, dscreen = ZBLscreen(r0)
-        numerator = r0*(r0-screen/e) - p**2
-        denominator = 2*r0 - (screen+r0*dscreen)/e
-        r0 -= numerator/denominator
-
-        residuum = 1 - screen/(e*r0) - p**2/r0**2
-        if abs(residuum) < 1e-4:
+        residuum = 1.0 - screen/(e*r0) - psq/(r0*r0)
+        if fabs(residuum) < 1e-4:
             break
-
     return r0
 
 # --- magic constants ---
-C1 = 0.99229
-C2 = 0.011615
-C3 = 0.007122
-C4 = 14.813
-C5 = 9.3066
+cdef double C1 = 0.99229
+cdef double C2 = 0.011615
+cdef double C3 = 0.007122
+cdef double C4 = 14.813
+cdef double C5 = 9.3066
 
-def magic(double e, double p):
+cdef inline double magic(double e, double p):
     cdef double r0 = estimate_apsis(e, p)
     cdef double screen, dscreen
-    screen, dscreen = ZBLscreen(r0)
+    ZBLscreen_vals(r0, &screen, &dscreen)
 
-    cdef double rho = 2*(e*r0-screen) / (screen/r0-dscreen)
+    cdef double rho   = 2.0*(e*r0 - screen) / (screen/r0 - dscreen)
     cdef double sqrte = sqrt(e)
-    cdef double alpha = 1 + C1/sqrte
-    cdef double beta = (C2+sqrte) / (C3+sqrte)
-    cdef double gamma = (C4+e) / (C5+e)
-    cdef double a = 2 * alpha * e * pow(p, beta)
-    cdef double g = gamma / (sqrt(1+a**2)-a)
-    cdef double delta = a * (r0-p) / (1+g)
+    cdef double alpha = 1.0 + C1/sqrte
+    cdef double beta  = (C2 + sqrte) / (C3 + sqrte)
+    cdef double gamma = (C4 + e) / (C5 + e)
+    cdef double a     = 2.0 * alpha * e * pow(p, beta)
+    cdef double g     = gamma / (sqrt(1.0 + a*a) - a)
+    cdef double delta = a * (r0 - p) / (1.0 + g)
 
     cdef double cos_half_theta = (p + rho + delta) / (r0 + rho)
-    if cos_half_theta > 1:
-        cos_half_theta = 1
+    if cos_half_theta > 1.0:
+        cos_half_theta = 1.0
+    elif cos_half_theta < -1.0:
+        cos_half_theta = -1.0
     return cos_half_theta
 
 
