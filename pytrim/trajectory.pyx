@@ -13,6 +13,12 @@ import numpy as np
 
 cdef double EMIN = 5.0
 
+# local aliases (saves repeated globals lookups)
+cdef object _get_recoil = get_recoil_position
+cdef object _scatter = scatter
+cdef object _eloss = eloss
+cdef object _inside = is_inside_target
+
 def setup():
     global EMIN
     EMIN = 5.0
@@ -22,12 +28,6 @@ cpdef trajectory(object pos_init, object dir_init, double e_init):
     Simulate one trajectory.
     This uses python operations intentionally (Numpy arrays) = identical logic.
     """
-    # local aliases (saves repeated globals lookups)
-    cdef object _get_recoil = get_recoil_position
-    cdef object _scatter    = scatter
-    cdef object _eloss      = eloss
-    cdef object _inside     = is_inside_target
-    cdef double _emin       = EMIN
 
     # copy to avoid alias issues
     cdef object pos = pos_init.copy()
@@ -44,6 +44,8 @@ cpdef trajectory(object pos_init, object dir_init, double e_init):
 
     cdef object dirp = np.empty(3, dtype=np.float64)
     cdef double[:] dirpv = dirp
+
+    cdef double _emin = EMIN
 
     while e > _emin:
 

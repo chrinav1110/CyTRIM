@@ -27,7 +27,7 @@ import trajectory
 
 start_time = time.time()
 
-nion = 200             # number of projectiles to simulate
+nion = 1000             # number of projectiles to simulate
 
 zmin = 0.0              # minimum z coordinate of the target (A)
 zmax = 4000.0           # maximum z coordinate of the target (A)

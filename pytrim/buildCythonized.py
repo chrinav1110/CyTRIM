@@ -3,6 +3,10 @@ import glob
 import shutil
 import subprocess
 
+#Call using: python .\buildCythonized.py
+#buildCythonized.py calls cythonized_setup.py
+
+
 # ----------------------------------------------------
 # go to the folder where THIS file is located
 # so relative paths point to the right place

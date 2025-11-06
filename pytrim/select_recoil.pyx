@@ -15,9 +15,14 @@ Available functions:
 
 from libc.math cimport sqrt, sin, cos, fabs, M_PI
 import numpy as np
+from libc.stdlib cimport rand, RAND_MAX
 
 cdef double MEAN_FREE_PATH = 1.0
 cdef double PMAX = 1.0
+
+cdef inline double urand() nogil:
+    # uniform [0,1)
+    return rand() / <double>RAND_MAX
 
 def setup(double density):
     global MEAN_FREE_PATH, PMAX
@@ -34,6 +39,8 @@ cpdef get_recoil_position(double[::1] pos, double[::1] dir, double[::1] dirp_out
     # random p + phi
     cdef double p = PMAX * sqrt(np.random.rand())
     cdef double fi = 2 * M_PI * np.random.rand()
+    #cdef double p = PMAX * sqrt(urand())
+    #cdef double fi = 2 * M_PI * urand()
 
     cdef double cos_fi = cos(fi)
     cdef double sin_fi = sin(fi)

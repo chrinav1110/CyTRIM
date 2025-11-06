@@ -18,7 +18,7 @@ import trajectory
 # Initial conditions
 pos_init = np.array([0.0, 0.0, 0.0], dtype=np.float64)
 dir_init = np.array([0.0, 0.0, 1.0], dtype=np.float64)
-e_init = 20000.0
+e_init = 50000.0
 
 G_pos_init = pos_init
 G_dir_init = dir_init
