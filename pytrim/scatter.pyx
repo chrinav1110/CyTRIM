@@ -32,18 +32,18 @@ def setup(double z1, double m1, double z2, double m2):
     DENFAC = 4 * m1_m2 / (1 + m1_m2)**2
 
 # --- ZBL constants ---
-cdef double A1=0.18175
-cdef double A2=0.50986
-cdef double A3=0.28022
-cdef double A4=0.02817
-cdef double B1=3.1998
-cdef double B2=0.94229
-cdef double B3=0.4029
-cdef double B4=0.20162
-cdef double A1B1=A1*B1
-cdef double A2B2=A2*B2
-cdef double A3B3=A3*B3
-cdef double A4B4=A4*B4
+cdef double A1 = 0.18175
+cdef double A2 = 0.50986
+cdef double A3 = 0.28022
+cdef double A4 = 0.02817
+cdef double B1 = 3.1998
+cdef double B2 = 0.94229
+cdef double B3 = 0.4029
+cdef double B4 = 0.20162
+cdef double A1B1 = A1 * B1
+cdef double A2B2 = A2 * B2
+cdef double A3B3 = A3 * B3
+cdef double A4B4 = A4 * B4
 
 cdef inline void ZBLscreen_vals(double r, double* screen, double* dscreen) nogil:
     cdef double e1 = exp(-B1 * r)
@@ -59,12 +59,16 @@ cdef double K3    = 7.2
 cdef double K1    = 1.0/(4.0*K2)
 cdef double R12sq = (2.0*K2)*(2.0*K2)
 cdef double R23sq = K3 / K2
+
+#Loop commented out because NITER set to 1
 cdef int    NITER = 1
 
-cdef inline double estimate_apsis(double e, double p):
+
+cdef inline double estimate_apsis(double e, double p) nogil:
     cdef double psq   = p*p
     cdef double r0sq  = 0.5 * (psq + sqrt(psq*psq + 4.0*K3/e))
     cdef double r0
+
     if r0sq < R23sq:
         r0sq = psq + K2/e
         if r0sq < R12sq:
@@ -74,7 +78,12 @@ cdef inline double estimate_apsis(double e, double p):
     else:
         r0 = sqrt(r0sq)
 
-    cdef double screen, dscreen, numerator, denominator, residuum
+    cdef double screen, dscreen
+    cdef double numerator, denominator
+
+    # Iter is set to 1, in that case the loop is not necessary
+    '''
+    cdef double residuum
     cdef int it
     for it in range(NITER):
         ZBLscreen_vals(r0, &screen, &dscreen)
@@ -85,7 +94,13 @@ cdef inline double estimate_apsis(double e, double p):
         residuum = 1.0 - screen/(e*r0) - psq/(r0*r0)
         if fabs(residuum) < 1e-4:
             break
+    '''
+    numerator = r0 * (r0 - screen / e) - psq
+    denominator = 2.0 * r0 - (screen + r0 * dscreen) / e
+    r0 -= numerator / denominator
+
     return r0
+
 
 # --- magic constants ---
 cdef double C1 = 0.99229
@@ -94,7 +109,7 @@ cdef double C3 = 0.007122
 cdef double C4 = 14.813
 cdef double C5 = 9.3066
 
-cdef inline double magic(double e, double p):
+cdef inline double magic(double e, double p) nogil:
     cdef double r0 = estimate_apsis(e, p)
     cdef double screen, dscreen
     ZBLscreen_vals(r0, &screen, &dscreen)

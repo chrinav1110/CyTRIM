@@ -19,6 +19,13 @@ import trajectory
 import csv
 import os
 
+# ---------------------------------------------------------
+# Benchmark
+# ---------------------------------------------------------
+ION_SETS = [1000]
+RUNS = 10
+RESULT_FILE = "benchmark_results.csv"
+
 
 # Initial conditions
 pos_init = np.array([0.0, 0.0, 0.0], dtype=np.float64)
@@ -88,14 +95,6 @@ def main(nion=1000, use_mp=True):
     print(f"Simulation time: {dt:.4f} s")
 
     return dt
-
-# ---------------------------------------------------------
-# Benchmark
-# ---------------------------------------------------------
-ION_SETS = [1, 10, 100, 1000]
-RUNS = 10
-RESULT_FILE = "benchmark_results.csv"
-
 
 
 def benchmark(name="default", use_mp = True):
