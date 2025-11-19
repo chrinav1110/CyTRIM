@@ -43,18 +43,21 @@ def setup(double density):
     PMAX = MEAN_FREE_PATH / sqrt(M_PI)
 
 
-cpdef get_recoil_position(double[::1] pos, double[::1] dir, double[::1] dirp_out):
+
+
+cdef void get_recoil_position_c(double[::1] pos, double[::1] dir, double[::1] dirp_out, double* free_path, double* p) nogil:
 
     cdef double pos_collision[3]
     cdef double pos_recoil[3]
 
-    cdef double free_path = MEAN_FREE_PATH
+    free_path[0] = MEAN_FREE_PATH
+
     # random p + phi
     #cdef double p = PMAX * sqrt(np.random.rand())
     #cdef double fi = 2 * M_PI * np.random.rand()
     #cdef double p = PMAX * sqrt(urand())
     #cdef double fi = 2 * M_PI * urand()
-    cdef double p = PMAX * sqrt(fast_rand())
+    p[0] = PMAX * sqrt(fast_rand())
     cdef double fi = 2 * M_PI * fast_rand()
 
     cdef double cos_fi = cos(fi)
@@ -91,18 +94,11 @@ cpdef get_recoil_position(double[::1] pos, double[::1] dir, double[::1] dirp_out
     dirp_out[1] /= n
     dirp_out[2] /= n
 
-    '''
-    # pos_recoil is never used?
-    # collision point
-    pos_collision[0] = pos[0] + free_path*dir[0]
-    pos_collision[1] = pos[1] + free_path*dir[1]
-    pos_collision[2] = pos[2] + free_path*dir[2]
 
-    # recoil point
-    pos_recoil[0] = pos_collision[0] + p*dirp_out[0]
-    pos_recoil[1] = pos_collision[1] + p*dirp_out[1]
-    pos_recoil[2] = pos_collision[2] + p*dirp_out[2]
-    return free_path, p, pos_recoil
-    '''
-
+# Python-visible wrapper
+cpdef get_recoil_position(double[::1] pos,
+                          double[::1] dir,
+                          double[::1] dirp_out):
+    cdef double free_path, p
+    get_recoil_position_c(pos, dir, dirp_out, &free_path, &p)
     return free_path, p
