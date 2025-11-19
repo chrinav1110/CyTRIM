@@ -48,14 +48,19 @@ trajectory.setup()
 def run_one(_):
     return trajectory.trajectory(G_pos_init, G_dir_init, G_e_init)
 
+
 #main
-def main(nion:int = 1000):
+#enable or disable multiprocessing
+def main(nion=1000, use_mp=True):
 
     start_time = time.time()
 
-    # multiprocessing
-    with Pool() as pool:
-        results = pool.map(run_one, range(nion))
+    if not use_mp:
+        # run single-threaded
+        results = [run_one(i) for i in range(nion)]
+    else:
+        with Pool() as pool:
+            results = pool.map(run_one, range(nion))
 
     # accumulate
     count_inside = 0
@@ -84,10 +89,6 @@ def main(nion:int = 1000):
 
     return dt
 
-
-#if __name__ == "__main__":
-#    main()
-
 # ---------------------------------------------------------
 # Benchmark
 # ---------------------------------------------------------
@@ -97,7 +98,7 @@ RESULT_FILE = "benchmark_results.csv"
 
 
 
-def benchmark(name="default"):
+def benchmark(name="default", use_mp = True):
     print("\n===== CyTRIM Benchmark =====")
     print(f"Benchmark name: {name}\n")
 
@@ -113,7 +114,7 @@ def benchmark(name="default"):
             times = []
 
             for r in range(RUNS):
-                dt = main(nion)
+                dt = main(nion, use_mp)
                 times.append(dt)
                 print(f"Run {r+1}: {dt:.4f} s")
 
