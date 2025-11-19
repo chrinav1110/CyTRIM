@@ -24,6 +24,19 @@ cdef inline double urand() nogil:
     # uniform [0,1)
     return rand() / <double>RAND_MAX
 
+
+cdef unsigned long long rng_state = 88172645463393265
+
+cdef inline double fast_rand() nogil:
+    global rng_state
+    cdef unsigned long long x = rng_state
+    x ^= x >> 12
+    x ^= x << 25
+    x ^= x >> 27
+    rng_state = x
+    return (x * 2685821657736338717ULL) / 18446744073709551616.0
+
+
 def setup(double density):
     global MEAN_FREE_PATH, PMAX
     MEAN_FREE_PATH = density**(-1.0/3.0)
@@ -37,10 +50,12 @@ cpdef get_recoil_position(double[::1] pos, double[::1] dir, double[::1] dirp_out
 
     cdef double free_path = MEAN_FREE_PATH
     # random p + phi
-    cdef double p = PMAX * sqrt(np.random.rand())
-    cdef double fi = 2 * M_PI * np.random.rand()
+    #cdef double p = PMAX * sqrt(np.random.rand())
+    #cdef double fi = 2 * M_PI * np.random.rand()
     #cdef double p = PMAX * sqrt(urand())
     #cdef double fi = 2 * M_PI * urand()
+    cdef double p = PMAX * sqrt(fast_rand())
+    cdef double fi = 2 * M_PI * fast_rand()
 
     cdef double cos_fi = cos(fi)
     cdef double sin_fi = sin(fi)

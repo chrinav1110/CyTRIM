@@ -5,6 +5,7 @@ CyTRIM main – multiprocessing
 from math import sqrt
 import time
 import numpy as np
+import sys
 
 from multiprocessing import Pool
 
@@ -13,6 +14,10 @@ import scatter
 import estop
 import geometry
 import trajectory
+
+#only for benchmarking
+import csv
+import os
 
 
 # Initial conditions
@@ -74,9 +79,57 @@ def main(nion:int = 1000):
     print(f"Mean penetration depth: {mean_z:.2f} A")
     print(f"Std depth: {std_z:.2f} A")
 
-    end_time = time.time()
-    print(f"Simulation time: {end_time - start_time:.2f} s")
+    dt = time.time() - start_time
+    print(f"Simulation time: {dt:.4f} s")
+
+    return dt
+
+
+#if __name__ == "__main__":
+#    main()
+
+# ---------------------------------------------------------
+# Benchmark
+# ---------------------------------------------------------
+ION_SETS = [1, 10, 100, 1000]
+RUNS = 10
+RESULT_FILE = "benchmark_results.csv"
+
+
+
+def benchmark(name="default"):
+    print("\n===== CyTRIM Benchmark =====")
+    print(f"Benchmark name: {name}\n")
+
+    # create CSV if not exists
+    new_file = not os.path.exists(RESULT_FILE)
+    with open(RESULT_FILE, "a", newline="") as f:
+        writer = csv.writer(f)
+        if new_file:
+            writer.writerow(["benchmark_name", "ions", "mean_time"])
+
+        for nion in ION_SETS:
+            print(f"--- nion = {nion} ---")
+            times = []
+
+            for r in range(RUNS):
+                dt = main(nion)
+                times.append(dt)
+                print(f"Run {r+1}: {dt:.4f} s")
+
+            avg = sum(times) / RUNS
+            print(f"Average for nion={nion}: {avg:.4f} s\n")
+
+            # write to file
+            writer.writerow([name, nion, avg])
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == "benchmark":
+        benchmark()
+    else:
+        # optional: allow "python cytrim.py 500" → run main(500)
+        if len(sys.argv) > 1:
+            main(int(sys.argv[1]))
+        else:
+            main()

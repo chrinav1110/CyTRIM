@@ -29,7 +29,6 @@ cpdef trajectory(object pos_init, object dir_init, double e_init):
     This uses python operations intentionally (Numpy arrays) = identical logic.
     """
 
-    # copy to avoid alias issues
     cdef object pos = pos_init.copy()
     cdef object dir = dir_init.copy()
 
